@@ -1,0 +1,86 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: stockchecker-configmap
+data:
+  config.json: |-
+    {
+        "SYMBOL": "MSFT",
+        "NDAYS": "3"
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockchecker
+  labels:
+    app: stockchecker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stockchecker
+  template:
+    metadata:
+      labels:
+        app: stockchecker 
+    spec:
+      containers:
+      - name: stockchecker
+        image: local/stockchecker:latest
+        imagePullPolicy: Never
+        ports:
+          - containerPort: 8080
+        envFrom:
+          - configMapRef:
+              name: stockchecker-configmap
+          - secretRef:
+              name: stockchecker-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stockchecker-service
+  labels:
+    app: stockchecker
+spec:
+  selector:
+    app: stockchecker
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress 
+metadata:
+  name: stockchecker-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: kubernetes.docker.internal
+    http:
+      paths:
+      - path: /stockchecker
+        pathType: Prefix
+        backend:
+          service:
+            name:  stockchecker-service
+            port: 
+              number: 8080
+  - host: localhost
+    http:
+      paths:
+      - path: /stockchecker
+        pathType: Prefix
+        backend:
+          service:
+            name:  stockchecker-service
+            port: 
+              number: 8080
+    
