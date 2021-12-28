@@ -4,11 +4,8 @@ kind: ConfigMap
 metadata:
     name: stockchecker-configmap
 data:
-  config.json: |-
-    {
-        "SYMBOL": "MSFT",
-        "NDAYS": "3"
-    }
+  SYMBOL: "MSFT"
+  NDAYS: "3"
 
 ---
 apiVersion: apps/v1
@@ -29,6 +26,7 @@ spec:
     spec:
       containers:
       - name: stockchecker
+        # image: jenkins/jenkins:lts
         image: local/stockchecker:latest
         imagePullPolicy: Never
         ports:
@@ -47,6 +45,7 @@ metadata:
   labels:
     app: stockchecker
 spec:
+  type: LoadBalancer  
   selector:
     app: stockchecker
   ports:
@@ -54,33 +53,32 @@ spec:
       port: 8080
       targetPort: 8080
 
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress 
-metadata:
-  name: stockchecker-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  rules:
-  - host: kubernetes.docker.internal
-    http:
-      paths:
-      - path: /stockchecker
-        pathType: Prefix
-        backend:
-          service:
-            name:  stockchecker-service
-            port: 
-              number: 8080
-  - host: localhost
-    http:
-      paths:
-      - path: /stockchecker
-        pathType: Prefix
-        backend:
-          service:
-            name:  stockchecker-service
-            port: 
-              number: 8080
-    
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress 
+# metadata:
+#   name: stockchecker-ingress
+#   annotations:
+#     nginx.ingress.kubernetes.io/rewrite-target: /
+# spec:
+#   rules:
+#   - host: kubernetes.docker.internal
+#     http:
+#       paths:
+#       - path: /stockchecker
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name:  stockchecker-service
+#             port: 
+#               number: 8080
+#   - host: localhost
+#     http:
+#       paths:
+#       - path: /stockchecker
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name:  stockchecker-service
+#             port: 
+#               number: 8080

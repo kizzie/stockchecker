@@ -39,24 +39,21 @@ Ensure that you have mini-kube or another kubernetes cluster running
 
 First we need to create the secret:
 ```
-kubectl create secret generic stockchecker-secret --from-literal=apikey=******** 
+kubectl create secret generic stockchecker-secret --from-literal=APIKEY=*** 
 ```
-(add your key in rather than stars)
+(add your key in rather than stars, the caps for APIKEY are needed)
 
-Now we need to ensure we have any kind of ingress controller - so for either windows or mac we can use 
-```
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.0.1/deploy/static/provider/cloud/deploy.yaml
-```
-See: https://github.com/kubernetes/ingress-nginx/issues/7686 for more info 
-and 
-https://stackoverflow.com/questions/65193758/enable-ingress-controller-on-docker-desktop-with-wls2
+If you want to run this with minikube then we need to start up the tunnel for the load balancer in another browser:
 
+```
+minikube tunnel
+```
+Alternatively you could always run an ingress controller via Traefik or nginx.
 Run apply the manifest with
 
 ``` 
 kubectl apply -f k8s/manifest.yml
 ```
 
-Windows: `http://kubernetes.docker.internal/stockchecker`
-Mac: `http://localhost/stockchecker`
-```
+Then go to your url
+Mac: `http://localhost:8080`
