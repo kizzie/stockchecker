@@ -19,6 +19,8 @@ Then you can run this with:
 
 Then you should be able to navigate to localhost:8080 to see the results
 
+---
+
 ### Docker container
 Build the docker container with
 
@@ -34,6 +36,8 @@ To run:
 docker run --rm --env-file .env -p 8080:8080 local/stockchecker
 ```
 
+---
+
 ### Kubernetes deployment
 Ensure that you have mini-kube or another kubernetes cluster running 
 
@@ -48,7 +52,7 @@ If you want to run this with minikube then we need to start up the tunnel for th
 ```
 minikube tunnel
 ```
-Alternatively you could always run an ingress controller via Traefik or nginx.
+
 Run apply the manifest with
 
 ``` 
@@ -56,4 +60,40 @@ kubectl apply -f k8s/manifest.yml
 ```
 
 Then go to your url
-Mac: `http://localhost:8080`
+`http://localhost:8080`
+
+
+---
+
+**Running an ingress controller**
+
+Alternatively you could always run an ingress controller via Traefik or nginx.
+
+Setup the nginx ingress controller:
+```
+minikube addons enable ingress
+```
+
+for non-minikube options use 
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.0.1/deploy/static/provider/cloud/deploy.yaml
+```
+I have not tested this one extensively though as windows, wsl2, docker and k8s all together was too much for Christmas!
+
+This should hang off the stockchecker-service-np and the stockchecker-ingress. 
+
+Edit the hosts file to add `test.kat` to point at the ip address given in the ingress (if running locally we need to use the minikube ip instead)
+```
+kubectl get ingress
+NAME                                             CLASS   HOSTS      ADDRESS     PORTS   AGE
+ingress.networking.k8s.io/stockchecker-ingress   nginx   test.kat   172.0.0.15   80      23m
+
+--or--
+minikube ip
+```
+
+If everything is configured correctly you should be able to go to 
+
+http://test.kat
+
+(As a note, I never actually got this to run with windows... it would either return nothing for localhost, or just hang for the minikube ip)
