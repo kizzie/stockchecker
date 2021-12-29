@@ -78,7 +78,7 @@ for non-minikube options use
 ```
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.0.1/deploy/static/provider/cloud/deploy.yaml
 ```
-I have not tested this one extensively though as windows, wsl2, docker and k8s all together was too much for Christmas!
+I have not tested non-minikube extensively though as windows, wsl2, docker and k8s all together was too much for Christmas!
 
 This should hang off the stockchecker-service-np and the stockchecker-ingress. 
 
