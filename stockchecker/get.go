@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -16,7 +17,7 @@ import (
 // MSFT data=[110.56, 111.25, 115.78], average=112.50
 type stock struct {
 	StockSymbol string 		`json:Symbol`
-	Close  		[]float64 	`json:data`
+	Data  		[]float64 	`json:data`
 	Average 	float64 	`json:average`
 }
 
@@ -78,30 +79,47 @@ func getAverage(values []float64) float64 {
 	return sum/float64(len(values))
 }
 
+func sortKeys(keys []string) []string {
+
+	sort.Slice(keys, func(i, j int) bool {
+		layout := "2006-01-02"
+		date1, _ := time.Parse(layout, keys[i])
+		date2, _ := time.Parse(layout, keys[j])
+		return date1.Before(date2)
+	})
+
+	return keys
+}
+
+func getKeys(data alphavantagedata) []string {
+	var keys []string
+	
+	for k := range data.TimeSeries {
+		keys = append(keys, k)
+	}
+
+	return sortKeys(keys)
+}
 
 func getLastNDays(data alphavantagedata, ndays int) []float64 {
+	keys := getKeys(data)
+	fmt.Println(keys)
+
 	var close []float64
-	// you can't just iterate over all the keys as its a map, they don't always come out in date order...
-	// so we will do it by day, starting today and going back a day. However we want a break if this
-	// doesn't find three valid dates.
-	d := time.Now()
-	max_attempts := len(data.TimeSeries)
-	attempt := 0
-	for {
-		if len(close) >= ndays || attempt > max_attempts {
-			break;
-		}
-		// get the date in the right format
-		date := d.Format("2006-01-02")
-		// add the value to the list
-		close_value, _ := strconv.ParseFloat(data.TimeSeries[date].Close, 64)
-		if close_value != 0 {
-			close = append(close, close_value)
-		}
-		// go back a day
-		d = d.AddDate(0, 0, -1)
-		attempt++
+	// in case we ask for more days than are available, the max should be the max available
+	var max int
+	if len(keys) < ndays {
+		max = len(keys)
+	} else {
+		max = ndays
 	}
+	
+	for i := len(keys)-1; i >= len(keys)-max; i-- {
+		key := keys[i]
+		close_value, _ := strconv.ParseFloat(data.TimeSeries[key].Close, 64)
+		close = append(close, close_value)
+	}
+
 	return close
 }
 
@@ -111,7 +129,7 @@ func getDisplayData(data alphavantagedata, ndays int, symbol string) stock {
 	// create the struct and return
 	return stock{
 		StockSymbol: symbol,
-		Close: close,
+		Data: close,
 		Average: getAverage(close),
 	}
 }
@@ -129,7 +147,6 @@ func GetStock(c *gin.Context) {
 	apikey := os.Getenv("APIKEY")
 	
 	data := getData(symbol, apikey)
-
 	// run the get request
 	c.IndentedJSON(http.StatusOK, getDisplayData(data, ndays, symbol))
 }
