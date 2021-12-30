@@ -103,8 +103,7 @@ func getKeys(data alphavantagedata) []string {
 
 func getLastNDays(data alphavantagedata, ndays int) []float64 {
 	keys := getKeys(data)
-	fmt.Println(keys)
-
+	
 	var close []float64
 	// in case we ask for more days than are available, the max should be the max available
 	var max int
